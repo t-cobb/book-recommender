@@ -121,7 +121,133 @@
     </div>
 
     <script>
-       // Curator's personality through book insights
+      const inventory = {
+            "inventory": [
+                {
+                    "title": "Wind-Up Bird Chronicle",
+                    "author": "Haruki Murakami",
+                    "year": 1995,
+                    "condition": "Good",
+                    "genre": "Fiction",
+                    "subGenre": "Magical Realism",
+                    "themes": ["Identity", "Isolation"],
+                    "description": "Surreal journey through modern Japan",
+                    "price": 45
+                },
+                {
+                    "title": "The Glass Bead Game",
+                    "author": "Hermann Hesse",
+                    "year": 1943,
+                    "condition": "Very Good",
+                    "genre": "Fiction",
+                    "subGenre": "Philosophical",
+                    "themes": ["Intellectualism", "Spirituality"],
+                    "description": "Utopian future of intellectual society",
+                    "price": 65
+                },
+                {
+                    "title": "Invisible Cities",
+                    "author": "Italo Calvino",
+                    "year": 1972,
+                    "condition": "Excellent",
+                    "genre": "Fiction",
+                    "subGenre": "Experimental",
+                    "themes": ["Imagination", "Memory"],
+                    "description": "Poetic exploration of urban life",
+                    "price": 40
+                },
+                {
+                    "title": "Cosmos",
+                    "author": "Carl Sagan",
+                    "year": 1980,
+                    "condition": "Good",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Science",
+                    "themes": ["Wonder", "Space"],
+                    "description": "Journey through the universe",
+                    "price": 55
+                },
+                {
+                    "title": "Man's Search for Meaning",
+                    "author": "Viktor Frankl",
+                    "year": 1946,
+                    "condition": "Fair",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Psychology",
+                    "themes": ["Purpose", "Resilience"],
+                    "description": "Holocaust survival and meaning",
+                    "price": 35
+                },
+                {
+                    "title": "The Book of Tea",
+                    "author": "Kakuzo Okakura",
+                    "year": 1906,
+                    "condition": "Good",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Philosophy",
+                    "themes": ["Aesthetics", "Mindfulness"],
+                    "description": "Tea ceremony and Zen thought",
+                    "price": 85
+                },
+                {
+                    "title": "Song of Solomon",
+                    "author": "Toni Morrison",
+                    "year": 1977,
+                    "condition": "Very Good",
+                    "genre": "Fiction",
+                    "subGenre": "Literary",
+                    "themes": ["Identity", "Heritage"],
+                    "description": "African American family saga",
+                    "price": 75
+                },
+                {
+                    "title": "The Dispossessed",
+                    "author": "Ursula K. Le Guin",
+                    "year": 1974,
+                    "condition": "Good",
+                    "genre": "Fiction",
+                    "subGenre": "Science Fiction",
+                    "themes": ["Politics", "Utopia"],
+                    "description": "Anarchist society exploration",
+                    "price": 60
+                },
+                {
+                    "title": "Hero with a Thousand Faces",
+                    "author": "Joseph Campbell",
+                    "year": 1949,
+                    "condition": "Fair",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Mythology",
+                    "themes": ["Storytelling", "Archetypes"],
+                    "description": "Universal hero journey study",
+                    "price": 50
+                },
+                {
+                    "title": "I and Thou",
+                    "author": "Martin Buber",
+                    "year": 1923,
+                    "condition": "Good",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Philosophy",
+                    "themes": ["Relationships", "Existence"],
+                    "description": "Dialogue and existence study",
+                    "price": 70
+                },
+                {
+                    "title": "Dune",
+                    "author": "Frank Herbert",
+                    "year": 1965,
+                    "condition": "Very Good",
+                    "genre": "Fiction",
+                    "subGenre": "Science Fiction",
+                    "themes": ["Power", "Religion"],
+                    "description": "Epic desert planet saga",
+                    "price": 80
+                }
+            ]
+        };
+
+        // [Previous curatorInsights object stays the same]
         const curatorInsights = {
             'Fiction': {
                 'Magical Realism': "In the realm between reality and dreams, these pages hold truths that everyday life sometimes fails to capture.",
@@ -138,15 +264,6 @@
                 'History': "The past isn't dead; it's not even past. These pages make that clear."
             }
         };
-
-        function getThemeOverlap(userThemes, bookThemes) {
-            return bookThemes.filter(theme => 
-                userThemes.some(userTheme => 
-                    userTheme.toLowerCase().includes(theme.toLowerCase()) ||
-                    theme.toLowerCase().includes(userTheme.toLowerCase())
-                )
-            ).length;
-        }
 
         const questions = [
             {
@@ -196,6 +313,16 @@
         let currentQuestion = 0;
         let answers = {};
         let currentRecommendations = [];
+        let alternativeIndex = 0;
+
+        function getThemeOverlap(userThemes, bookThemes) {
+            return bookThemes.filter(theme => 
+                userThemes.some(userTheme => 
+                    userTheme.toLowerCase().includes(theme.toLowerCase()) ||
+                    theme.toLowerCase().includes(userTheme.toLowerCase())
+                )
+            ).length;
+        }
 
         function getCuratorNote(book) {
             const personalInsights = [
@@ -219,7 +346,7 @@
 
             const weightedBooks = inventory.inventory.map(book => {
                 let score = 0;
-                const maxScore = 15; // Increased max score for more nuance
+                const maxScore = 15;
 
                 // Core matching criteria (0-5 points)
                 if (answers.purpose === 'Learn something new' && book.genre === 'Non-Fiction') score += 3;
@@ -334,7 +461,6 @@
             updateQuestion();
         }
 
-        let alternativeIndex = 0;
         function showAlternative() {
             alternativeIndex++;
             showRecommendation();
