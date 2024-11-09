@@ -121,32 +121,181 @@
     </div>
 
     <script>
-        // Curator's personality through book insights
+       // Curator's personality through book insights
         const curatorInsights = {
             'Fiction': {
                 'Magical Realism': "In the realm between reality and dreams, these pages hold truths that everyday life sometimes fails to capture.",
                 'Philosophical': "Some novels don't just tell stories; they ask the questions that keep us awake at night.",
                 'Science Fiction': "The best sci-fi isn't about predicting the future - it's about illuminating the present.",
+                'Literary': "There are books that entertain, and then there are books that become part of who you are.",
+                'Experimental': "Sometimes the most profound stories are told in the most unusual ways."
             },
             'Non-Fiction': {
                 'Philosophy': "Sometimes the most practical wisdom comes from the most abstract thoughts.",
                 'Science': "Wonder is the beginning of wisdom, and these pages are full of wonder.",
                 'Psychology': "Understanding ourselves is life's greatest journey.",
+                'Mythology': "In ancient stories, we often find modern truths.",
+                'History': "The past isn't dead; it's not even past. These pages make that clear."
             }
         };
 
+        function getThemeOverlap(userThemes, bookThemes) {
+            return bookThemes.filter(theme => 
+                userThemes.some(userTheme => 
+                    userTheme.toLowerCase().includes(theme.toLowerCase()) ||
+                    theme.toLowerCase().includes(userTheme.toLowerCase())
+                )
+            ).length;
+        }
+
+        const questions = [
+            {
+                id: 'purpose',
+                text: 'What brings you to our shelves today, dear reader?',
+                options: [
+                    'Learn something new',
+                    'Escape into a story',
+                    'Find personal growth',
+                    'Explore new perspectives'
+                ],
+                themes: {
+                    'Learn something new': ['Wonder', 'Discovery', 'Science', 'History', 'Knowledge'],
+                    'Escape into a story': ['Imagination', 'Adventure', 'Fantasy', 'Mystery'],
+                    'Find personal growth': ['Purpose', 'Spirituality', 'Resilience', 'Growth', 'Wisdom'],
+                    'Explore new perspectives': ['Identity', 'Culture', 'Politics', 'Philosophy', 'Society']
+                }
+            },
+            {
+                id: 'mood',
+                text: 'And what state of mind are you hoping to cultivate?',
+                options: [
+                    'Thoughtful and reflective',
+                    'Adventure and excitement',
+                    'Deep and philosophical',
+                    'Light and entertaining'
+                ],
+                themes: {
+                    'Thoughtful and reflective': ['Memory', 'Identity', 'Relationships', 'Contemplation'],
+                    'Adventure and excitement': ['Power', 'Adventure', 'Wonder', 'Discovery'],
+                    'Deep and philosophical': ['Spirituality', 'Philosophy', 'Existence', 'Truth'],
+                    'Light and entertaining': ['Imagination', 'Memory', 'Adventure', 'Joy']
+                }
+            },
+            {
+                id: 'preference',
+                text: 'In your experience, which tends to resonate more deeply with you?',
+                options: [
+                    'Classic wisdom that has stood the test of time',
+                    'Contemporary perspectives on modern life',
+                    'Timeless stories that transcend their era',
+                    'Innovative ideas that challenge conventions'
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = {};
+        let currentRecommendations = [];
+
         function getCuratorNote(book) {
-            const generalInsights = [
-                "I've seen this book change how readers see the world.",
-                "This one tends to find readers exactly when they need it.",
-                "There's a particular magic in how this story unfolds.",
+            const personalInsights = [
+                `I've watched readers lose themselves in these pages for hours. ${book.title} has a way of making time disappear.`,
+                "This book has a special place on our shelves - and in the hearts of many readers who've discovered it.",
+                `There's something about ${book.title} that seems to find readers exactly when they need it most.`,
+                "I've seen this book change how readers see the world, one page at a time."
             ];
 
             const specificInsight = curatorInsights[book.genre]?.[book.subGenre];
-            return specificInsight || generalInsights[Math.floor(Math.random() * generalInsights.length)];
+            const personalNote = personalInsights[Math.floor(Math.random() * personalInsights.length)];
+            
+            return specificInsight ? `${specificInsight} ${personalNote}` : personalNote;
         }
 
-        [... rest of the JavaScript code remains the same until the showRecommendation function ...]
+        function findBook(answers) {
+            // Get themes based on user's purpose and mood
+            const purposeThemes = questions[0].themes[answers.purpose] || [];
+            const moodThemes = questions[1].themes[answers.mood] || [];
+            const userThemes = [...new Set([...purposeThemes, ...moodThemes])];
+
+            const weightedBooks = inventory.inventory.map(book => {
+                let score = 0;
+                const maxScore = 15; // Increased max score for more nuance
+
+                // Core matching criteria (0-5 points)
+                if (answers.purpose === 'Learn something new' && book.genre === 'Non-Fiction') score += 3;
+                if (answers.purpose === 'Escape into a story' && book.genre === 'Fiction') score += 3;
+                if (answers.purpose === 'Find personal growth' && 
+                    (book.themes.some(theme => ['Purpose', 'Growth', 'Spirituality'].includes(theme)))) score += 2;
+                if (answers.purpose === 'Explore new perspectives' && 
+                    (book.themes.some(theme => ['Identity', 'Culture', 'Philosophy'].includes(theme)))) score += 2;
+
+                // Theme matching (0-4 points)
+                const themeOverlap = getThemeOverlap(userThemes, book.themes);
+                score += Math.min(themeOverlap * 2, 4);
+
+                // Mood alignment (0-3 points)
+                if (answers.mood === 'Thoughtful and reflective' && 
+                    (book.subGenre === 'Philosophy' || book.subGenre === 'Literary')) score += 3;
+                if (answers.mood === 'Adventure and excitement' && 
+                    (book.subGenre === 'Science Fiction' || book.themes.includes('Adventure'))) score += 3;
+                if (answers.mood === 'Deep and philosophical' && 
+                    (book.subGenre === 'Philosophy' || book.themes.includes('Spirituality'))) score += 3;
+                if (answers.mood === 'Light and entertaining' && 
+                    (book.subGenre === 'Magical Realism' || book.subGenre === 'Poetry')) score += 3;
+
+                // Time period preference (0-3 points)
+                const isClassic = book.year < 1950;
+                const isContemporary = book.year > 1980;
+                
+                if (answers.preference === 'Classic wisdom that has stood the test of time' && isClassic) score += 3;
+                if (answers.preference === 'Contemporary perspectives on modern life' && isContemporary) score += 3;
+                if (answers.preference === 'Timeless stories that transcend their era' && 
+                    book.themes.some(theme => ['Identity', 'Love', 'Truth'].includes(theme))) score += 3;
+                if (answers.preference === 'Innovative ideas that challenge conventions' && 
+                    book.subGenre === 'Experimental') score += 3;
+
+                // Normalize score to percentage
+                const normalizedScore = (score / maxScore) * 100;
+
+                return { 
+                    book, 
+                    score: normalizedScore,
+                    matchedThemes: book.themes.filter(theme => userThemes.includes(theme))
+                };
+            });
+
+            // Sort by score
+            weightedBooks.sort((a, b) => b.score - a.score);
+
+            // Store top matches for alternatives
+            currentRecommendations = weightedBooks.slice(0, 3);
+            
+            // Return current recommendation based on alternativeIndex
+            return currentRecommendations[alternativeIndex % currentRecommendations.length];
+        }
+
+        function nextQuestion(id, answer) {
+            answers[id] = answer;
+            
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                updateQuestion();
+            } else {
+                showRecommendation();
+            }
+        }
+
+        function updateQuestion() {
+            const question = questions[currentQuestion];
+            document.querySelector('.question').textContent = question.text;
+            
+            const optionsHtml = question.options.map(option => 
+                `<button class="option-button bg-white text-gray-800 px-6 py-4 rounded-lg border border-gray-200 hover:border-indigo-500 transition-all duration-300"
+                    onclick="nextQuestion('${question.id}', '${option}')">${option}</button>`
+            ).join('');
+            
+            document.querySelector('.options').innerHTML = optionsHtml;
+        }
 
         function showRecommendation() {
             document.getElementById('questionnaire').classList.add('hidden');
@@ -173,7 +322,6 @@
             document.getElementById('curatorNote').textContent = getCuratorNote(book);
             document.getElementById('bookDescription').textContent = book.description;
             
-            // Create theme tags
             const themeHtml = book.themes.map(theme => 
                 `<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">${theme}</span>`
             ).join('');
@@ -200,6 +348,7 @@
             document.getElementById('questionnaire').classList.add('hidden');
             document.getElementById('recommendation').classList.add('hidden');
         }
+    
     </script>
 </body>
 </html>
