@@ -80,6 +80,14 @@
             border: 1px solid #ddd;
             border-radius: 4px;
         }
+
+        .match-quality {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -99,6 +107,7 @@
         <div id="recommendation" class="card">
             <h2>Your Perfect Match:</h2>
             <div class="book-details">
+                <div id="matchQuality" class="match-quality"></div>
                 <h3 id="bookTitle"></h3>
                 <p id="bookAuthor"></p>
                 <p id="bookDescription"></p>
@@ -109,7 +118,17 @@
     </div>
 
     <script>
-        const inventory = {const inventory = {
+        // Helper function to find theme overlap between arrays
+        function getThemeOverlap(userThemes, bookThemes) {
+            return bookThemes.filter(theme => 
+                userThemes.some(userTheme => 
+                    userTheme.toLowerCase().includes(theme.toLowerCase()) ||
+                    theme.toLowerCase().includes(userTheme.toLowerCase())
+                )
+            ).length;
+        }
+
+        const inventory = {
             "inventory": [
                 {
                     "title": "Wind-Up Bird Chronicle",
@@ -235,45 +254,17 @@
             ]
         };
 
-        // Also update the findBook function to be smarter
-        function findBook(answers) {
-            // Weight each book based on the user's answers
-            const weightedBooks = inventory.inventory.map(book => {
-                let score = 0;
-                
-                // Match based on purpose
-                if (answers.purpose === 'Learn something new' && book.genre === 'Non-Fiction') score += 2;
-                if (answers.purpose === 'Escape into a story' && book.genre === 'Fiction') score += 2;
-                if (answers.purpose === 'Find personal growth' && 
-                    (book.themes.includes('Purpose') || book.themes.includes('Spirituality'))) score += 2;
-                if (answers.purpose === 'Explore new perspectives' && 
-                    (book.subGenre === 'Philosophy' || book.subGenre === 'Cultural')) score += 2;
-
-                // Match based on genre preference
-                if (answers.genre === book.genre) score += 2;
-                
-                // Match based on time commitment
-                if (answers.time === 'Just short sessions' && book.subGenre === 'Poetry') score += 1;
-                if (answers.time === 'I can get lost in a book all day' && 
-                    (book.subGenre === 'Science Fiction' || book.subGenre === 'Literary')) score += 1;
-
-                return { book, score };
-            });
-
-            // Sort by score and return the highest-scoring book
-            weightedBooks.sort((a, b) => b.score - a.score);
-            return weightedBooks[0].book;
-        }
-                }
-                // ... rest of your inventory
-            ]
-        };
-
         const questions = [
             {
                 id: 'purpose',
                 text: 'What brings you to books today?',
-                options: ['Learn something new', 'Escape into a story', 'Find personal growth', 'Explore new perspectives']
+                options: ['Learn something new', 'Escape into a story', 'Find personal growth', 'Explore new perspectives'],
+                themes: {
+                    'Learn something new': ['Wonder', 'Discovery', 'Science', 'History'],
+                    'Escape into a story': ['Imagination', 'Adventure', 'Fantasy'],
+                    'Find personal growth': ['Purpose', 'Spirituality', 'Resilience', 'Growth'],
+                    'Explore new perspectives': ['Identity', 'Culture', 'Politics', 'Philosophy']
+                }
             },
             {
                 id: 'genre',
@@ -281,9 +272,15 @@
                 options: ['Fiction', 'Non-Fiction', 'Poetry', 'Graphic Novels']
             },
             {
-                id: 'time',
-                text: 'How much time can you dedicate to reading?',
-                options: ['Just short sessions', 'A few hours at a time', 'I can get lost in a book all day']
+                id: 'mood',
+                text: 'What kind of mood are you in for reading?',
+                options: ['Thoughtful and reflective', 'Adventure and excitement', 'Deep and philosophical', 'Light and entertaining'],
+                themes: {
+                    'Thoughtful and reflective': ['Memory', 'Identity', 'Relationships'],
+                    'Adventure and excitement': ['Power', 'Adventure', 'Wonder'],
+                    'Deep and philosophical': ['Spirituality', 'Philosophy', 'Existence'],
+                    'Light and entertaining': ['Imagination', 'Memory', 'Adventure']
+                }
             }
         ];
 
@@ -312,26 +309,82 @@
             document.querySelector('.options').innerHTML = optionsHtml;
         }
 
+        function findBook(answers) {
+            // Get themes based on user's purpose and mood
+            const purposeThemes = questions[0].themes[answers.purpose] || [];
+            const moodThemes = questions[2].themes[answers.mood] || [];
+            const userThemes = [...new Set([...purposeThemes, ...moodThemes])];
+
+            const weightedBooks = inventory.inventory.map(book => {
+                let score = 0;
+                const maxScore = 10;
+
+                // Core matching criteria (0-4 points)
+                if (answers.genre === book.genre) score += 2;
+                if (answers.purpose === 'Learn something new' && book.genre === 'Non-Fiction') score += 2;
+                if (answers.purpose === 'Escape into a story' && book.genre === 'Fiction') score += 2;
+
+                // Theme matching (0-3 points)
+                const themeOverlap = getThemeOverlap(userThemes, book.themes);
+                score += Math.min(themeOverlap * 1.5, 3);
+
+                // Mood alignment (0-2 points)
+                if (answers.mood === 'Thoughtful and reflective' && 
+                    (book.subGenre === 'Philosophy' || book.subGenre === 'Literary')) score += 2;
+                if (answers.mood === 'Adventure and excitement' && 
+                    (book.subGenre === 'Science Fiction' || book.themes.includes('Adventure'))) score += 2;
+                if (answers.mood === 'Deep and philosophical' && 
+                    (book.subGenre === 'Philosophy' || book.themes.includes('Spirituality'))) score += 2;
+                if (answers.mood === 'Light and entertaining' && 
+                    (book.subGenre === 'Magical Realism' || book.subGenre === 'Poetry')) score += 2;
+
+                // Normalize score to percentage
+                const normalizedScore = (score / maxScore) * 100;
+
+                return { 
+                    book, 
+                    score: normalizedScore,
+                    matchedThemes: book.themes.filter(theme => userThemes.includes(theme))
+                };
+            });
+
+            // Sort by score
+            weightedBooks.sort((a, b) => b.score - a.score);
+
+            // Get top 3 matches
+            const topMatches = weightedBooks.slice(0, 3);
+            
+            // Return the best match, but randomly select from top 3 if scores are close
+            const bestScore = topMatches[0].score;
+            const closeMatches = topMatches.filter(match => match.score >= bestScore - 10);
+            
+            return closeMatches[Math.floor(Math.random() * closeMatches.length)];
+        }
+
         function showRecommendation() {
             document.getElementById('questionnaire').style.display = 'none';
             document.getElementById('recommendation').style.display = 'block';
 
-            // Simple recommendation logic
-            const book = findBook(answers);
+            const result = findBook(answers);
+            const book = result.book;
             
+            let matchText = "";
+            if (result.score >= 90) matchText = "Perfect Match!";
+            else if (result.score >= 70) matchText = "Great Match!";
+            else if (result.score >= 50) matchText = "Good Match";
+            else matchText = "Interesting Pick";
+
+            document.getElementById('matchQuality').textContent = `${matchText} (${Math.round(result.score)}% match)`;
+            document.getElementById('matchQuality').style.backgroundColor = 
+                result.score >= 90 ? '#4ade80' :
+                result.score >= 70 ? '#22c55e' :
+                result.score >= 50 ? '#0ea5e9' : '#60a5fa';
+            document.getElementById('matchQuality').style.color = 'white';
+
             document.getElementById('bookTitle').textContent = book.title;
             document.getElementById('bookAuthor').textContent = `by ${book.author}`;
             document.getElementById('bookDescription').textContent = book.description;
             document.getElementById('bookThemes').textContent = `Themes: ${book.themes.join(', ')}`;
-        }
-
-        function findBook(answers) {
-            // Simple matching logic - can be enhanced
-            if (answers.purpose === 'Learn something new') {
-                return inventory.inventory.find(book => book.genre === 'Non-Fiction') || inventory.inventory[0];
-            } else {
-                return inventory.inventory.find(book => book.genre === 'Fiction') || inventory.inventory[0];
-            }
         }
 
         function restart() {
