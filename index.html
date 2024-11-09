@@ -109,7 +109,7 @@
     </div>
 
     <script>
-        const inventory = {
+        const inventory = {const inventory = {
             "inventory": [
                 {
                     "title": "Wind-Up Bird Chronicle",
@@ -132,6 +132,138 @@
                     "themes": ["Intellectualism", "Spirituality"],
                     "description": "Utopian future of intellectual society",
                     "price": 65
+                },
+                {
+                    "title": "Invisible Cities",
+                    "author": "Italo Calvino",
+                    "year": 1972,
+                    "condition": "Excellent",
+                    "genre": "Fiction",
+                    "subGenre": "Experimental",
+                    "themes": ["Imagination", "Memory"],
+                    "description": "Poetic exploration of urban life",
+                    "price": 40
+                },
+                {
+                    "title": "Cosmos",
+                    "author": "Carl Sagan",
+                    "year": 1980,
+                    "condition": "Good",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Science",
+                    "themes": ["Wonder", "Space"],
+                    "description": "Journey through the universe",
+                    "price": 55
+                },
+                {
+                    "title": "Man's Search for Meaning",
+                    "author": "Viktor Frankl",
+                    "year": 1946,
+                    "condition": "Fair",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Psychology",
+                    "themes": ["Purpose", "Resilience"],
+                    "description": "Holocaust survival and meaning",
+                    "price": 35
+                },
+                {
+                    "title": "The Book of Tea",
+                    "author": "Kakuzo Okakura",
+                    "year": 1906,
+                    "condition": "Good",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Philosophy",
+                    "themes": ["Aesthetics", "Mindfulness"],
+                    "description": "Tea ceremony and Zen thought",
+                    "price": 85
+                },
+                {
+                    "title": "Song of Solomon",
+                    "author": "Toni Morrison",
+                    "year": 1977,
+                    "condition": "Very Good",
+                    "genre": "Fiction",
+                    "subGenre": "Literary",
+                    "themes": ["Identity", "Heritage"],
+                    "description": "African American family saga",
+                    "price": 75
+                },
+                {
+                    "title": "The Dispossessed",
+                    "author": "Ursula K. Le Guin",
+                    "year": 1974,
+                    "condition": "Good",
+                    "genre": "Fiction",
+                    "subGenre": "Science Fiction",
+                    "themes": ["Politics", "Utopia"],
+                    "description": "Anarchist society exploration",
+                    "price": 60
+                },
+                {
+                    "title": "Hero with a Thousand Faces",
+                    "author": "Joseph Campbell",
+                    "year": 1949,
+                    "condition": "Fair",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Mythology",
+                    "themes": ["Storytelling", "Archetypes"],
+                    "description": "Universal hero journey study",
+                    "price": 50
+                },
+                {
+                    "title": "I and Thou",
+                    "author": "Martin Buber",
+                    "year": 1923,
+                    "condition": "Good",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Philosophy",
+                    "themes": ["Relationships", "Existence"],
+                    "description": "Dialogue and existence study",
+                    "price": 70
+                },
+                {
+                    "title": "Dune",
+                    "author": "Frank Herbert",
+                    "year": 1965,
+                    "condition": "Very Good",
+                    "genre": "Fiction",
+                    "subGenre": "Science Fiction",
+                    "themes": ["Power", "Religion"],
+                    "description": "Epic desert planet saga",
+                    "price": 80
+                }
+            ]
+        };
+
+        // Also update the findBook function to be smarter
+        function findBook(answers) {
+            // Weight each book based on the user's answers
+            const weightedBooks = inventory.inventory.map(book => {
+                let score = 0;
+                
+                // Match based on purpose
+                if (answers.purpose === 'Learn something new' && book.genre === 'Non-Fiction') score += 2;
+                if (answers.purpose === 'Escape into a story' && book.genre === 'Fiction') score += 2;
+                if (answers.purpose === 'Find personal growth' && 
+                    (book.themes.includes('Purpose') || book.themes.includes('Spirituality'))) score += 2;
+                if (answers.purpose === 'Explore new perspectives' && 
+                    (book.subGenre === 'Philosophy' || book.subGenre === 'Cultural')) score += 2;
+
+                // Match based on genre preference
+                if (answers.genre === book.genre) score += 2;
+                
+                // Match based on time commitment
+                if (answers.time === 'Just short sessions' && book.subGenre === 'Poetry') score += 1;
+                if (answers.time === 'I can get lost in a book all day' && 
+                    (book.subGenre === 'Science Fiction' || book.subGenre === 'Literary')) score += 1;
+
+                return { book, score };
+            });
+
+            // Sort by score and return the highest-scoring book
+            weightedBooks.sort((a, b) => b.score - a.score);
+            return weightedBooks[0].book;
+        }
                 }
                 // ... rest of your inventory
             ]
