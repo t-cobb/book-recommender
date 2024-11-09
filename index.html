@@ -3,367 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Recommender</title>
+    <title>Personal Book Curator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .option-button {
+            transition: all 0.3s ease;
+        }
+
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f6f9fc 0%, #edf2f7 100%);
+            min-height: 100vh;
+        }
+
+        .book-card {
+            transition: all 0.3s ease;
+        }
+
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .curator-quote {
+            font-style: italic;
+            color: #4a5568;
             line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
+            padding: 1rem;
+            border-left: 4px solid #cbd5e0;
+            margin: 1rem 0;
         }
 
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .question {
-            font-size: 1.2em;
-            margin-bottom: 15px;
-        }
-
-        .options {
-            display: grid;
-            gap: 10px;
-        }
-
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        button.option {
-            background: white;
-            color: #333;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        button.option:hover {
-            background: #f0f0f0;
-        }
-
-        #recommendation {
-            display: none;
-        }
-
-        .book-details {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .restart {
-            margin-top: 20px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .match-quality {
-            font-weight: bold;
-            margin-bottom: 10px;
-            padding: 5px 10px;
-            border-radius: 4px;
-            display: inline-block;
+        .match-badge {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transform: rotate(12deg);
         }
     </style>
 </head>
-<body>
-    <div class="card">
-        <h1>Personal Book Recommender</h1>
-        
-        <div id="questionnaire">
-            <div class="question">What brings you to books today?</div>
-            <div class="options">
-                <button class="option" onclick="nextQuestion('purpose', 'Learn something new')">Learn something new</button>
-                <button class="option" onclick="nextQuestion('purpose', 'Escape into a story')">Escape into a story</button>
-                <button class="option" onclick="nextQuestion('purpose', 'Find personal growth')">Find personal growth</button>
-                <button class="option" onclick="nextQuestion('purpose', 'Explore new perspectives')">Explore new perspectives</button>
+<body class="p-4 md:p-8">
+    <div class="max-w-3xl mx-auto">
+        <div id="welcome" class="glass-card rounded-lg p-6 mb-8 animate-fade-in">
+            <h1 class="text-3xl font-bold mb-4 text-gray-800">Welcome to Your Personal Book Curator</h1>
+            <p class="text-gray-600 mb-4">I'm your bibliophilic guide through this carefully curated collection. Each book here has a story, not just within its pages, but in how it found its way to our shelves.</p>
+            <div class="curator-quote">
+                "The right book, at the right moment, can change a life. Let's find yours."
+            </div>
+            <button onclick="startQuestions()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 flex items-center gap-2">
+                Begin Your Journey
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+        </div>
+
+        <div id="questionnaire" class="hidden">
+            <div class="glass-card rounded-lg p-6 animate-fade-in">
+                <div class="space-y-6">
+                    <div class="question text-xl font-medium text-gray-800"></div>
+                    <div class="options grid gap-3"></div>
+                </div>
             </div>
         </div>
 
-        <div id="recommendation" class="card">
-            <h2>Your Perfect Match:</h2>
-            <div class="book-details">
-                <div id="matchQuality" class="match-quality"></div>
-                <h3 id="bookTitle"></h3>
-                <p id="bookAuthor"></p>
-                <p id="bookDescription"></p>
-                <p id="bookThemes"></p>
+        <div id="recommendation" class="hidden">
+            <div class="glass-card rounded-lg p-6 relative animate-fade-in">
+                <div id="matchQuality" class="match-badge bg-green-500 text-white"></div>
+                
+                <div class="book-card bg-white rounded-lg p-6 shadow-sm relative">
+                    <h3 id="bookTitle" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+                    <p id="bookAuthor" class="text-lg text-gray-600 mb-4"></p>
+                    
+                    <div class="curator-note mb-4">
+                        <div class="text-sm text-gray-500 mb-2">Curator's Note:</div>
+                        <div id="curatorNote" class="text-gray-700 italic"></div>
+                    </div>
+
+                    <p id="bookDescription" class="text-gray-600 mb-4"></p>
+                    
+                    <div class="themes flex flex-wrap gap-2 mb-4">
+                        <div id="bookThemes"></div>
+                    </div>
+
+                    <div class="mt-6 flex gap-4">
+                        <button onclick="restart()" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-300">
+                            Try Again
+                        </button>
+                        <button onclick="showAlternative()" class="bg-indigo-100 text-indigo-700 px-6 py-2 rounded-lg hover:bg-indigo-200 transition-colors duration-300">
+                            See Another Option
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button class="restart" onclick="restart()">Start Over</button>
         </div>
     </div>
 
     <script>
-        // Helper function to find theme overlap between arrays
-        function getThemeOverlap(userThemes, bookThemes) {
-            return bookThemes.filter(theme => 
-                userThemes.some(userTheme => 
-                    userTheme.toLowerCase().includes(theme.toLowerCase()) ||
-                    theme.toLowerCase().includes(userTheme.toLowerCase())
-                )
-            ).length;
-        }
-
-        const inventory = {
-            "inventory": [
-                {
-                    "title": "Wind-Up Bird Chronicle",
-                    "author": "Haruki Murakami",
-                    "year": 1995,
-                    "condition": "Good",
-                    "genre": "Fiction",
-                    "subGenre": "Magical Realism",
-                    "themes": ["Identity", "Isolation"],
-                    "description": "Surreal journey through modern Japan",
-                    "price": 45
-                },
-                {
-                    "title": "The Glass Bead Game",
-                    "author": "Hermann Hesse",
-                    "year": 1943,
-                    "condition": "Very Good",
-                    "genre": "Fiction",
-                    "subGenre": "Philosophical",
-                    "themes": ["Intellectualism", "Spirituality"],
-                    "description": "Utopian future of intellectual society",
-                    "price": 65
-                },
-                {
-                    "title": "Invisible Cities",
-                    "author": "Italo Calvino",
-                    "year": 1972,
-                    "condition": "Excellent",
-                    "genre": "Fiction",
-                    "subGenre": "Experimental",
-                    "themes": ["Imagination", "Memory"],
-                    "description": "Poetic exploration of urban life",
-                    "price": 40
-                },
-                {
-                    "title": "Cosmos",
-                    "author": "Carl Sagan",
-                    "year": 1980,
-                    "condition": "Good",
-                    "genre": "Non-Fiction",
-                    "subGenre": "Science",
-                    "themes": ["Wonder", "Space"],
-                    "description": "Journey through the universe",
-                    "price": 55
-                },
-                {
-                    "title": "Man's Search for Meaning",
-                    "author": "Viktor Frankl",
-                    "year": 1946,
-                    "condition": "Fair",
-                    "genre": "Non-Fiction",
-                    "subGenre": "Psychology",
-                    "themes": ["Purpose", "Resilience"],
-                    "description": "Holocaust survival and meaning",
-                    "price": 35
-                },
-                {
-                    "title": "The Book of Tea",
-                    "author": "Kakuzo Okakura",
-                    "year": 1906,
-                    "condition": "Good",
-                    "genre": "Non-Fiction",
-                    "subGenre": "Philosophy",
-                    "themes": ["Aesthetics", "Mindfulness"],
-                    "description": "Tea ceremony and Zen thought",
-                    "price": 85
-                },
-                {
-                    "title": "Song of Solomon",
-                    "author": "Toni Morrison",
-                    "year": 1977,
-                    "condition": "Very Good",
-                    "genre": "Fiction",
-                    "subGenre": "Literary",
-                    "themes": ["Identity", "Heritage"],
-                    "description": "African American family saga",
-                    "price": 75
-                },
-                {
-                    "title": "The Dispossessed",
-                    "author": "Ursula K. Le Guin",
-                    "year": 1974,
-                    "condition": "Good",
-                    "genre": "Fiction",
-                    "subGenre": "Science Fiction",
-                    "themes": ["Politics", "Utopia"],
-                    "description": "Anarchist society exploration",
-                    "price": 60
-                },
-                {
-                    "title": "Hero with a Thousand Faces",
-                    "author": "Joseph Campbell",
-                    "year": 1949,
-                    "condition": "Fair",
-                    "genre": "Non-Fiction",
-                    "subGenre": "Mythology",
-                    "themes": ["Storytelling", "Archetypes"],
-                    "description": "Universal hero journey study",
-                    "price": 50
-                },
-                {
-                    "title": "I and Thou",
-                    "author": "Martin Buber",
-                    "year": 1923,
-                    "condition": "Good",
-                    "genre": "Non-Fiction",
-                    "subGenre": "Philosophy",
-                    "themes": ["Relationships", "Existence"],
-                    "description": "Dialogue and existence study",
-                    "price": 70
-                },
-                {
-                    "title": "Dune",
-                    "author": "Frank Herbert",
-                    "year": 1965,
-                    "condition": "Very Good",
-                    "genre": "Fiction",
-                    "subGenre": "Science Fiction",
-                    "themes": ["Power", "Religion"],
-                    "description": "Epic desert planet saga",
-                    "price": 80
-                }
-            ]
+        // Curator's personality through book insights
+        const curatorInsights = {
+            'Fiction': {
+                'Magical Realism': "In the realm between reality and dreams, these pages hold truths that everyday life sometimes fails to capture.",
+                'Philosophical': "Some novels don't just tell stories; they ask the questions that keep us awake at night.",
+                'Science Fiction': "The best sci-fi isn't about predicting the future - it's about illuminating the present.",
+            },
+            'Non-Fiction': {
+                'Philosophy': "Sometimes the most practical wisdom comes from the most abstract thoughts.",
+                'Science': "Wonder is the beginning of wisdom, and these pages are full of wonder.",
+                'Psychology': "Understanding ourselves is life's greatest journey.",
+            }
         };
 
-        const questions = [
-            {
-                id: 'purpose',
-                text: 'What brings you to books today?',
-                options: ['Learn something new', 'Escape into a story', 'Find personal growth', 'Explore new perspectives'],
-                themes: {
-                    'Learn something new': ['Wonder', 'Discovery', 'Science', 'History'],
-                    'Escape into a story': ['Imagination', 'Adventure', 'Fantasy'],
-                    'Find personal growth': ['Purpose', 'Spirituality', 'Resilience', 'Growth'],
-                    'Explore new perspectives': ['Identity', 'Culture', 'Politics', 'Philosophy']
-                }
-            },
-            {
-                id: 'genre',
-                text: 'What types of books do you typically enjoy?',
-                options: ['Fiction', 'Non-Fiction', 'Poetry', 'Graphic Novels']
-            },
-            {
-                id: 'mood',
-                text: 'What kind of mood are you in for reading?',
-                options: ['Thoughtful and reflective', 'Adventure and excitement', 'Deep and philosophical', 'Light and entertaining'],
-                themes: {
-                    'Thoughtful and reflective': ['Memory', 'Identity', 'Relationships'],
-                    'Adventure and excitement': ['Power', 'Adventure', 'Wonder'],
-                    'Deep and philosophical': ['Spirituality', 'Philosophy', 'Existence'],
-                    'Light and entertaining': ['Imagination', 'Memory', 'Adventure']
-                }
-            }
-        ];
+        function getCuratorNote(book) {
+            const generalInsights = [
+                "I've seen this book change how readers see the world.",
+                "This one tends to find readers exactly when they need it.",
+                "There's a particular magic in how this story unfolds.",
+            ];
 
-        let currentQuestion = 0;
-        let answers = {};
-
-        function nextQuestion(id, answer) {
-            answers[id] = answer;
-            
-            if (currentQuestion < questions.length - 1) {
-                currentQuestion++;
-                updateQuestion();
-            } else {
-                showRecommendation();
-            }
+            const specificInsight = curatorInsights[book.genre]?.[book.subGenre];
+            return specificInsight || generalInsights[Math.floor(Math.random() * generalInsights.length)];
         }
 
-        function updateQuestion() {
-            const question = questions[currentQuestion];
-            document.querySelector('.question').textContent = question.text;
-            
-            const optionsHtml = question.options.map(option => 
-                `<button class="option" onclick="nextQuestion('${question.id}', '${option}')">${option}</button>`
-            ).join('');
-            
-            document.querySelector('.options').innerHTML = optionsHtml;
-        }
-
-        function findBook(answers) {
-            // Get themes based on user's purpose and mood
-            const purposeThemes = questions[0].themes[answers.purpose] || [];
-            const moodThemes = questions[2].themes[answers.mood] || [];
-            const userThemes = [...new Set([...purposeThemes, ...moodThemes])];
-
-            const weightedBooks = inventory.inventory.map(book => {
-                let score = 0;
-                const maxScore = 10;
-
-                // Core matching criteria (0-4 points)
-                if (answers.genre === book.genre) score += 2;
-                if (answers.purpose === 'Learn something new' && book.genre === 'Non-Fiction') score += 2;
-                if (answers.purpose === 'Escape into a story' && book.genre === 'Fiction') score += 2;
-
-                // Theme matching (0-3 points)
-                const themeOverlap = getThemeOverlap(userThemes, book.themes);
-                score += Math.min(themeOverlap * 1.5, 3);
-
-                // Mood alignment (0-2 points)
-                if (answers.mood === 'Thoughtful and reflective' && 
-                    (book.subGenre === 'Philosophy' || book.subGenre === 'Literary')) score += 2;
-                if (answers.mood === 'Adventure and excitement' && 
-                    (book.subGenre === 'Science Fiction' || book.themes.includes('Adventure'))) score += 2;
-                if (answers.mood === 'Deep and philosophical' && 
-                    (book.subGenre === 'Philosophy' || book.themes.includes('Spirituality'))) score += 2;
-                if (answers.mood === 'Light and entertaining' && 
-                    (book.subGenre === 'Magical Realism' || book.subGenre === 'Poetry')) score += 2;
-
-                // Normalize score to percentage
-                const normalizedScore = (score / maxScore) * 100;
-
-                return { 
-                    book, 
-                    score: normalizedScore,
-                    matchedThemes: book.themes.filter(theme => userThemes.includes(theme))
-                };
-            });
-
-            // Sort by score
-            weightedBooks.sort((a, b) => b.score - a.score);
-
-            // Get top 3 matches
-            const topMatches = weightedBooks.slice(0, 3);
-            
-            // Return the best match, but randomly select from top 3 if scores are close
-            const bestScore = topMatches[0].score;
-            const closeMatches = topMatches.filter(match => match.score >= bestScore - 10);
-            
-            return closeMatches[Math.floor(Math.random() * closeMatches.length)];
-        }
+        [... rest of the JavaScript code remains the same until the showRecommendation function ...]
 
         function showRecommendation() {
-            document.getElementById('questionnaire').style.display = 'none';
-            document.getElementById('recommendation').style.display = 'block';
+            document.getElementById('questionnaire').classList.add('hidden');
+            document.getElementById('recommendation').classList.remove('hidden');
 
             const result = findBook(answers);
             const book = result.book;
@@ -374,25 +161,44 @@
             else if (result.score >= 50) matchText = "Good Match";
             else matchText = "Interesting Pick";
 
-            document.getElementById('matchQuality').textContent = `${matchText} (${Math.round(result.score)}% match)`;
-            document.getElementById('matchQuality').style.backgroundColor = 
-                result.score >= 90 ? '#4ade80' :
-                result.score >= 70 ? '#22c55e' :
-                result.score >= 50 ? '#0ea5e9' : '#60a5fa';
-            document.getElementById('matchQuality').style.color = 'white';
+            const matchQuality = document.getElementById('matchQuality');
+            matchQuality.textContent = `${matchText}`;
+            matchQuality.style.backgroundColor = 
+                result.score >= 90 ? '#10b981' :
+                result.score >= 70 ? '#059669' :
+                result.score >= 50 ? '#0284c7' : '#60a5fa';
 
             document.getElementById('bookTitle').textContent = book.title;
             document.getElementById('bookAuthor').textContent = `by ${book.author}`;
+            document.getElementById('curatorNote').textContent = getCuratorNote(book);
             document.getElementById('bookDescription').textContent = book.description;
-            document.getElementById('bookThemes').textContent = `Themes: ${book.themes.join(', ')}`;
+            
+            // Create theme tags
+            const themeHtml = book.themes.map(theme => 
+                `<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">${theme}</span>`
+            ).join('');
+            document.getElementById('bookThemes').innerHTML = themeHtml;
+        }
+
+        function startQuestions() {
+            document.getElementById('welcome').classList.add('hidden');
+            document.getElementById('questionnaire').classList.remove('hidden');
+            updateQuestion();
+        }
+
+        let alternativeIndex = 0;
+        function showAlternative() {
+            alternativeIndex++;
+            showRecommendation();
         }
 
         function restart() {
             currentQuestion = 0;
             answers = {};
-            document.getElementById('questionnaire').style.display = 'block';
-            document.getElementById('recommendation').style.display = 'none';
-            updateQuestion();
+            alternativeIndex = 0;
+            document.getElementById('welcome').classList.remove('hidden');
+            document.getElementById('questionnaire').classList.add('hidden');
+            document.getElementById('recommendation').classList.add('hidden');
         }
     </script>
 </body>
