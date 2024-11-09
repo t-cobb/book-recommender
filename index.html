@@ -3,125 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Book Curator</title>
+    <title>Muse Bandit Book Curator</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        body {
+            background: linear-gradient(135deg, #f6f9fc 0%, #edf2f7 100%);
+            min-height: 100vh;
         }
         
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+        .chat-container {
+            height: calc(100vh - 180px);
+        }
+        
+        .message {
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-out;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #5850ec;
+            border-radius: 50%;
+            animation: blink 1.4s infinite both;
+            display: inline-block;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes blink {
+            0% { opacity: 0.1; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0.1; transform: scale(0.8); }
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
         }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .option-button {
-            transition: all 0.3s ease;
-        }
-
-        .option-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            background: linear-gradient(135deg, #f6f9fc 0%, #edf2f7 100%);
-            min-height: 100vh;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .book-card {
             transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
         .book-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         }
 
-        .curator-quote {
-            font-style: italic;
-            color: #4a5568;
-            line-height: 1.6;
-            padding: 1rem;
-            border-left: 4px solid #cbd5e0;
-            margin: 1rem 0;
+        .theme-tag {
+            transition: all 0.2s ease;
         }
 
-        .match-badge {
-            position: absolute;
-            top: -12px;
-            right: -12px;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transform: rotate(12deg);
+        .theme-tag:hover {
+            background-color: #5850ec;
+            color: white;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(88, 80, 236, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(88, 80, 236, 0.5);
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-3xl mx-auto">
-        <div id="welcome" class="glass-card rounded-lg p-6 mb-8 animate-fade-in">
-            <h1 class="text-3xl font-bold mb-4 text-gray-800">Welcome to Your Personal Book Curator</h1>
-            <p class="text-gray-600 mb-4">I'm your bibliophilic guide through this carefully curated collection. Each book here has a story, not just within its pages, but in how it found its way to our shelves.</p>
-            <div class="curator-quote">
-                "The right book, at the right moment, can change a life. Let's find yours."
-            </div>
-            <button onclick="startQuestions()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 flex items-center gap-2">
-                Begin Your Journey
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            </button>
-        </div>
-
-        <div id="questionnaire" class="hidden">
-            <div class="glass-card rounded-lg p-6 animate-fade-in">
-                <div class="space-y-6">
-                    <div class="question text-xl font-medium text-gray-800"></div>
-                    <div class="options grid gap-3"></div>
+<body>
+    <div class="max-w-4xl mx-auto p-4">
+        <div class="glass-card rounded-lg p-4 shadow-lg">
+            <div class="messages-container chat-container overflow-y-auto mb-4">
+                <div id="chat" class="space-y-4 p-4">
+                    <!-- Messages will appear here -->
+                </div>
+                <div id="typingIndicator" class="typing-indicator hidden ml-4 mb-4">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
             </div>
-        </div>
-
-        <div id="recommendation" class="hidden">
-            <div class="glass-card rounded-lg p-6 relative animate-fade-in">
-                <div id="matchQuality" class="match-badge bg-green-500 text-white"></div>
-                
-                <div class="book-card bg-white rounded-lg p-6 shadow-sm relative">
-                    <h3 id="bookTitle" class="text-2xl font-bold text-gray-800 mb-2"></h3>
-                    <p id="bookAuthor" class="text-lg text-gray-600 mb-4"></p>
-                    
-                    <div class="curator-note mb-4">
-                        <div class="text-sm text-gray-500 mb-2">Curator's Note:</div>
-                        <div id="curatorNote" class="text-gray-700 italic"></div>
-                    </div>
-
-                    <p id="bookDescription" class="text-gray-600 mb-4"></p>
-                    
-                    <div class="themes flex flex-wrap gap-2 mb-4">
-                        <div id="bookThemes"></div>
-                    </div>
-
-                    <div class="mt-6 flex gap-4">
-                        <button onclick="restart()" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-300">
-                            Try Again
-                        </button>
-                        <button onclick="showAlternative()" class="bg-indigo-100 text-indigo-700 px-6 py-2 rounded-lg hover:bg-indigo-200 transition-colors duration-300">
-                            See Another Option
-                        </button>
-                    </div>
-                </div>
+            
+            <div class="flex gap-2 p-2">
+                <input type="text" id="userInput" 
+                    class="flex-1 p-4 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all duration-200 text-gray-700"
+                    placeholder="Tell me what kind of book you're looking for...">
+                <button onclick="sendMessage()" 
+                    class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center gap-2">
+                    <span>Send</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-      const inventory = {
+        // [Previous inventory object goes here - keeping the same books]
+        const inventory = {
             "inventory": [
                 {
                     "title": "Wind-Up Bird Chronicle",
@@ -243,238 +259,276 @@
                     "themes": ["Power", "Religion"],
                     "description": "Epic desert planet saga",
                     "price": 80
+                },
+                {
+                    "title": "Joy of Cooking",
+                    "author": "Irma Rombauer",
+                    "year": 1936,
+                    "condition": "Good",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Cookbook",
+                    "themes": ["Culinary Arts", "Tradition"],
+                    "description": "Classic American cookbook",
+                    "price": 45
+                },
+                {
+                    "title": "The Artist's Way",
+                    "author": "Julia Cameron",
+                    "year": 1992,
+                    "condition": "Excellent",
+                    "genre": "Non-Fiction",
+                    "subGenre": "Self-Help",
+                    "themes": ["Creativity", "Personal Growth"],
+                    "description": "12-week creativity course",
+                    "price": 35
+                },
+                {
+                    "title": "Watchmen",
+                    "author": "Alan Moore",
+                    "year": 1987,
+                    "condition": "Very Good",
+                    "genre": "Fiction",
+                    "subGenre": "Graphic Novel",
+                    "themes": ["Morality", "Power"],
+                    "description": "Superhero deconstruction",
+                    "price": 55
+                },
+                {
+                    "title": "The Hobbit",
+                    "author": "J.R.R. Tolkien",
+                    "year": 1937,
+                    "condition": "Fair",
+                    "genre": "Fiction",
+                    "subGenre": "Fantasy",
+                    "themes": ["Adventure", "Growth"],
+                    "description": "Classic fantasy journey",
+                    "price": 65
                 }
             ]
         };
 
-        // [Previous curatorInsights object stays the same]
-        const curatorInsights = {
-            'Fiction': {
-                'Magical Realism': "In the realm between reality and dreams, these pages hold truths that everyday life sometimes fails to capture.",
-                'Philosophical': "Some novels don't just tell stories; they ask the questions that keep us awake at night.",
-                'Science Fiction': "The best sci-fi isn't about predicting the future - it's about illuminating the present.",
-                'Literary': "There are books that entertain, and then there are books that become part of who you are.",
-                'Experimental': "Sometimes the most profound stories are told in the most unusual ways."
+        const bookseller = {
+            name: "Rowan",
+            personality: {
+                style: "warm and philosophical",
+                interests: ["literary fiction", "philosophy", "poetry"],
             },
-            'Non-Fiction': {
-                'Philosophy': "Sometimes the most practical wisdom comes from the most abstract thoughts.",
-                'Science': "Wonder is the beginning of wisdom, and these pages are full of wonder.",
-                'Psychology': "Understanding ourselves is life's greatest journey.",
-                'Mythology': "In ancient stories, we often find modern truths.",
-                'History': "The past isn't dead; it's not even past. These pages make that clear."
+            greetings: [
+                "Welcome to our literary sanctuary! I'm Rowan, and I believe every book finds its reader at just the right moment. What kind of journey are you looking to embark on today?",
+                "Hello there! I'm Rowan, your personal book curator. I've spent years connecting readers with stories that change their lives. What are you hoping to discover?",
+                "Welcome friend! I'm Rowan, and helping readers find their next literary companion is my life's work. What's calling to you today?"
+            ],
+            conversationalPrompts: [
+                "That's fascinating! You know, that reminds me of a few books that explore similar themes. Would you like me to share them?",
+                "I love how you're thinking about this. Are you drawn more to traditional narratives or experimental works?",
+                "That's such an interesting perspective. Would you prefer something more contemplative or something that moves at a faster pace?",
+                "You might enjoy exploring that theme through {genre}. Should I recommend something in that direction?"
+            ],
+            bookIntroductions: [
+                "I think you might find this one particularly intriguing:",
+                "This book has been transformative for many readers exploring similar ideas:",
+                "Here's one that I believe will resonate with what you're seeking:",
+                "Let me share a personal favorite that aligns with your interests:"
+            ],
+            responses: {
+                fiction: [
+                    "Fiction has this wonderful way of revealing universal truths through story. What kinds of stories tend to stay with you?",
+                    "Are you drawn more to contemporary voices or timeless classics?",
+                    "Would you prefer something more experimental or traditionally structured?"
+                ],
+                nonfiction: [
+                    "Non-fiction can be such an enlightening journey. Are you looking more for practical insights or theoretical exploration?",
+                    "Would you prefer something more academic or conversational in tone?",
+                    "Are you interested in contemporary perspectives or historical analysis?"
+                ],
+                philosophical: [
+                    "Those big questions deserve careful consideration. Would you prefer something more analytical or contemplative?",
+                    "Philosophy can be approached from so many angles. Do you enjoy more classical or contemporary thinkers?",
+                    "Are you interested in Eastern philosophy, Western philosophy, or a blend of traditions?"
+                ],
+                recommendations: [
+                    "Based on what you're saying, I think you might really connect with this:",
+                    "This book keeps coming to mind as you speak:",
+                    "Here's something that I believe will resonate with your interests:"
+                ]
             }
         };
 
-        const questions = [
-            {
-                id: 'purpose',
-                text: 'What brings you to our shelves today, dear reader?',
-                options: [
-                    'Learn something new',
-                    'Escape into a story',
-                    'Find personal growth',
-                    'Explore new perspectives'
-                ],
-                themes: {
-                    'Learn something new': ['Wonder', 'Discovery', 'Science', 'History', 'Knowledge'],
-                    'Escape into a story': ['Imagination', 'Adventure', 'Fantasy', 'Mystery'],
-                    'Find personal growth': ['Purpose', 'Spirituality', 'Resilience', 'Growth', 'Wisdom'],
-                    'Explore new perspectives': ['Identity', 'Culture', 'Politics', 'Philosophy', 'Society']
-                }
+        let conversationState = {
+            stage: 'greeting',
+            preferences: {
+                genre: null,
+                style: null,
+                themes: [],
+                mood: null
             },
-            {
-                id: 'mood',
-                text: 'And what state of mind are you hoping to cultivate?',
-                options: [
-                    'Thoughtful and reflective',
-                    'Adventure and excitement',
-                    'Deep and philosophical',
-                    'Light and entertaining'
-                ],
-                themes: {
-                    'Thoughtful and reflective': ['Memory', 'Identity', 'Relationships', 'Contemplation'],
-                    'Adventure and excitement': ['Power', 'Adventure', 'Wonder', 'Discovery'],
-                    'Deep and philosophical': ['Spirituality', 'Philosophy', 'Existence', 'Truth'],
-                    'Light and entertaining': ['Imagination', 'Memory', 'Adventure', 'Joy']
-                }
-            },
-            {
-                id: 'preference',
-                text: 'In your experience, which tends to resonate more deeply with you?',
-                options: [
-                    'Classic wisdom that has stood the test of time',
-                    'Contemporary perspectives on modern life',
-                    'Timeless stories that transcend their era',
-                    'Innovative ideas that challenge conventions'
-                ]
-            }
-        ];
+            recommendedBooks: [],
+            lastRecommendation: null,
+            conversationHistory: []
+        };
 
-        let currentQuestion = 0;
-        let answers = {};
-        let currentRecommendations = [];
-        let alternativeIndex = 0;
+        let recommendationCount = 0;
 
-        function getThemeOverlap(userThemes, bookThemes) {
-            return bookThemes.filter(theme => 
-                userThemes.some(userTheme => 
-                    userTheme.toLowerCase().includes(theme.toLowerCase()) ||
-                    theme.toLowerCase().includes(userTheme.toLowerCase())
-                )
-            ).length;
+        // Initialize chat
+        window.onload = function() {
+            addMessage(randomChoice(bookseller.greetings), 'bookseller');
+        };
+
+        function randomChoice(array) {
+            return array[Math.floor(Math.random() * array.length)];
         }
 
-        function getCuratorNote(book) {
-            const personalInsights = [
-                `I've watched readers lose themselves in these pages for hours. ${book.title} has a way of making time disappear.`,
-                "This book has a special place on our shelves - and in the hearts of many readers who've discovered it.",
-                `There's something about ${book.title} that seems to find readers exactly when they need it most.`,
-                "I've seen this book change how readers see the world, one page at a time."
-            ];
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.classList.remove('hidden');
+        }
 
-            const specificInsight = curatorInsights[book.genre]?.[book.subGenre];
-            const personalNote = personalInsights[Math.floor(Math.random() * personalInsights.length)];
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.classList.add('hidden');
+        }
+
+        function addMessage(text, sender, isBook = false) {
+            const chat = document.getElementById('chat');
+            const messageDiv = document.createElement('div');
             
-            return specificInsight ? `${specificInsight} ${personalNote}` : personalNote;
+            messageDiv.className = `message ${
+                sender === 'user' 
+                    ? 'ml-auto bg-indigo-600 text-white' 
+                    : 'mr-auto bg-white text-gray-800'
+                } rounded-lg p-4 shadow ${isBook ? 'book-card w-full max-w-2xl' : ''}`;
+            
+            if (isBook) {
+                messageDiv.innerHTML = text;
+            } else {
+                messageDiv.textContent = text;
+            }
+            
+            chat.appendChild(messageDiv);
+            chat.scrollTop = chat.scrollHeight;
         }
 
-        function findBook(answers) {
-            // Get themes based on user's purpose and mood
-            const purposeThemes = questions[0].themes[answers.purpose] || [];
-            const moodThemes = questions[1].themes[answers.mood] || [];
-            const userThemes = [...new Set([...purposeThemes, ...moodThemes])];
+        function createBookCard(book, matchScore = null) {
+            return `
+                <div class="book-card bg-white p-6">
+                    ${matchScore ? `
+                        <div class="float-right ml-4 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            ${matchScore}% Match
+                        </div>
+                    ` : ''}
+                    <h3 class="font-bold text-xl text-gray-800 mb-2">${book.title}</h3>
+                    <p class="text-gray-600 mb-4">by ${book.author}</p>
+                    <p class="text-gray-700 mb-4">${book.description}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${book.themes.map(theme => 
+                            `<span class="theme-tag px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm cursor-pointer">${theme}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
-            const weightedBooks = inventory.inventory.map(book => {
+        function findRelevantBooks(input, count = 3) {
+            const keywords = input.toLowerCase().split(' ');
+            const scoredBooks = inventory.inventory.map(book => {
                 let score = 0;
-                const maxScore = 15;
-
-                // Core matching criteria (0-5 points)
-                if (answers.purpose === 'Learn something new' && book.genre === 'Non-Fiction') score += 3;
-                if (answers.purpose === 'Escape into a story' && book.genre === 'Fiction') score += 3;
-                if (answers.purpose === 'Find personal growth' && 
-                    (book.themes.some(theme => ['Purpose', 'Growth', 'Spirituality'].includes(theme)))) score += 2;
-                if (answers.purpose === 'Explore new perspectives' && 
-                    (book.themes.some(theme => ['Identity', 'Culture', 'Philosophy'].includes(theme)))) score += 2;
-
-                // Theme matching (0-4 points)
-                const themeOverlap = getThemeOverlap(userThemes, book.themes);
-                score += Math.min(themeOverlap * 2, 4);
-
-                // Mood alignment (0-3 points)
-                if (answers.mood === 'Thoughtful and reflective' && 
-                    (book.subGenre === 'Philosophy' || book.subGenre === 'Literary')) score += 3;
-                if (answers.mood === 'Adventure and excitement' && 
-                    (book.subGenre === 'Science Fiction' || book.themes.includes('Adventure'))) score += 3;
-                if (answers.mood === 'Deep and philosophical' && 
-                    (book.subGenre === 'Philosophy' || book.themes.includes('Spirituality'))) score += 3;
-                if (answers.mood === 'Light and entertaining' && 
-                    (book.subGenre === 'Magical Realism' || book.subGenre === 'Poetry')) score += 3;
-
-                // Time period preference (0-3 points)
-                const isClassic = book.year < 1950;
-                const isContemporary = book.year > 1980;
+                const bookText = `${book.title} ${book.description} ${book.themes.join(' ')} ${book.genre} ${book.subGenre}`.toLowerCase();
                 
-                if (answers.preference === 'Classic wisdom that has stood the test of time' && isClassic) score += 3;
-                if (answers.preference === 'Contemporary perspectives on modern life' && isContemporary) score += 3;
-                if (answers.preference === 'Timeless stories that transcend their era' && 
-                    book.themes.some(theme => ['Identity', 'Love', 'Truth'].includes(theme))) score += 3;
-                if (answers.preference === 'Innovative ideas that challenge conventions' && 
-                    book.subGenre === 'Experimental') score += 3;
+                keywords.forEach(keyword => {
+                    if (bookText.includes(keyword)) score += 1;
+                    if (book.themes.some(theme => theme.toLowerCase().includes(keyword))) score += 2;
+                    if (book.genre.toLowerCase().includes(keyword)) score += 3;
+                    if (book.subGenre.toLowerCase().includes(keyword)) score += 2;
+                });
 
-                // Normalize score to percentage
-                const normalizedScore = (score / maxScore) * 100;
-
-                return { 
-                    book, 
-                    score: normalizedScore,
-                    matchedThemes: book.themes.filter(theme => userThemes.includes(theme))
-                };
+                return { book, score };
             });
 
-            // Sort by score
-            weightedBooks.sort((a, b) => b.score - a.score);
-
-            // Store top matches for alternatives
-            currentRecommendations = weightedBooks.slice(0, 3);
-            
-            // Return current recommendation based on alternativeIndex
-            return currentRecommendations[alternativeIndex % currentRecommendations.length];
+            return scoredBooks
+                .filter(item => item.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, count)
+                .map(item => item.book);
         }
 
-        function nextQuestion(id, answer) {
-            answers[id] = answer;
+        function generateResponse(userInput) {
+            // Update conversation state
+            conversationState.conversationHistory.push({
+                speaker: 'user',
+                text: userInput
+            });
+
+            // Analyze input for keywords and update preferences
+            const input = userInput.toLowerCase();
             
-            if (currentQuestion < questions.length - 1) {
-                currentQuestion++;
-                updateQuestion();
+            // Simple keyword matching
+            if (input.includes('fiction')) conversationState.preferences.genre = 'fiction';
+            if (input.includes('non-fiction') || input.includes('nonfiction')) conversationState.preferences.genre = 'nonfiction';
+            if (input.includes('philosophy') || input.includes('meaning')) conversationState.preferences.themes.push('philosophical');
+            
+            // Generate appropriate response
+            let response;
+            const relevantBooks = findRelevantBooks(userInput);
+
+            if (relevantBooks.length > 0 && recommendationCount < 3) {
+                recommendationCount++;
+                const book = relevantBooks[0];
+                
+                setTimeout(() => {
+                    addMessage(randomChoice(bookseller.responses.recommendations), 'bookseller');
+                    setTimeout(() => {
+                        addMessage(createBookCard(book, Math.floor(Math.random() * 20) + 80), 'bookseller', true);
+                    }, 1000);
+                }, 1000);
+
+                return randomChoice(bookseller.conversationalPrompts);
             } else {
-                showRecommendation();
+                if (conversationState.preferences.genre === 'fiction') {
+                    response = randomChoice(bookseller.responses.fiction);
+                } else if (conversationState.preferences.genre === 'nonfiction') {
+                    response = randomChoice(bookseller.responses.nonfiction);
+                } else {
+                    response = randomChoice(bookseller.conversationalPrompts);
+                }
+            }
+
+            return response;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage(message, 'user');
+                input.value = '';
+                
+                showTypingIndicator();
+                
+                // Simulate thinking and typing
+                await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+                
+                hideTypingIndicator();
+                const response = generateResponse(message);
+                addMessage(response, 'bookseller');
             }
         }
 
-        function updateQuestion() {
-            const question = questions[currentQuestion];
-            document.querySelector('.question').textContent = question.text;
-            
-            const optionsHtml = question.options.map(option => 
-                `<button class="option-button bg-white text-gray-800 px-6 py-4 rounded-lg border border-gray-200 hover:border-indigo-500 transition-all duration-300"
-                    onclick="nextQuestion('${question.id}', '${option}')">${option}</button>`
-            ).join('');
-            
-            document.querySelector('.options').innerHTML = optionsHtml;
-        }
+        // Event listeners
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
 
-        function showRecommendation() {
-            document.getElementById('questionnaire').classList.add('hidden');
-            document.getElementById('recommendation').classList.remove('hidden');
-
-            const result = findBook(answers);
-            const book = result.book;
-            
-            let matchText = "";
-            if (result.score >= 90) matchText = "Perfect Match!";
-            else if (result.score >= 70) matchText = "Great Match!";
-            else if (result.score >= 50) matchText = "Good Match";
-            else matchText = "Interesting Pick";
-
-            const matchQuality = document.getElementById('matchQuality');
-            matchQuality.textContent = `${matchText}`;
-            matchQuality.style.backgroundColor = 
-                result.score >= 90 ? '#10b981' :
-                result.score >= 70 ? '#059669' :
-                result.score >= 50 ? '#0284c7' : '#60a5fa';
-
-            document.getElementById('bookTitle').textContent = book.title;
-            document.getElementById('bookAuthor').textContent = `by ${book.author}`;
-            document.getElementById('curatorNote').textContent = getCuratorNote(book);
-            document.getElementById('bookDescription').textContent = book.description;
-            
-            const themeHtml = book.themes.map(theme => 
-                `<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">${theme}</span>`
-            ).join('');
-            document.getElementById('bookThemes').innerHTML = themeHtml;
-        }
-
-        function startQuestions() {
-            document.getElementById('welcome').classList.add('hidden');
-            document.getElementById('questionnaire').classList.remove('hidden');
-            updateQuestion();
-        }
-
-        function showAlternative() {
-            alternativeIndex++;
-            showRecommendation();
-        }
-
-        function restart() {
-            currentQuestion = 0;
-            answers = {};
-            alternativeIndex = 0;
-            document.getElementById('welcome').classList.remove('hidden');
-            document.getElementById('questionnaire').classList.add('hidden');
-            document.getElementById('recommendation').classList.add('hidden');
-        }
-    
+        // Initialize chat themes
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('theme-tag')) {
+                const theme = e.target.textContent;
+                const message = `Tell me more about books that explore ${theme}`;
+                document.getElementById('userInput').value = message;
+            }
+        });
     </script>
 </body>
 </html>
